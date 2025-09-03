@@ -4,10 +4,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 //json stufs
+import java.awt.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
+import javax.swing.*;
 //idk but it needs it
 
 public class Main {
@@ -15,6 +17,7 @@ public class Main {
         try{
             Scanner scanner = new Scanner(System.in);
             //scans when asked
+            getUImenu();
             String location;
             //save this for later
             do{
@@ -79,6 +82,22 @@ public class Main {
         }
         return null;
     }
+    private static void getUImenu(){
+        JFrame frame = new JFrame("A Simple GUI");
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 500);
+        frame.setLocation(430, 100);
+
+        //JPanel panel = new JPanel();
+        //JTextField box = new JTextField();
+        //panel.add(box, BorderLayout.CENTER);
+        //frame.add(panel);
+        //frame.setVisible(true);
+        //box.setSize(100,25);
+
+    };
+
 
     private static void displayWeatherData(double latitude, double longitude){
         try{
