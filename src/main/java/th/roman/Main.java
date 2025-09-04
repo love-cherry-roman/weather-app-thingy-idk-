@@ -14,34 +14,113 @@ import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        try{
-            Scanner scanner = new Scanner(System.in);
-            //scans when asked
-            getUImenu();
-            String location;
-            //save this for later
-            do{
-                System.out.print("Enter city : ");
-                location = scanner.nextLine();
-                //take a wild guess
-                if(location.equalsIgnoreCase("No")) break;
-                //no means no
-                JSONObject LocData = (JSONObject) getLocationData(location);
-                //makes an array of allllll the data i think
-                double latitude = (double) LocData.get("latitude");
-                double longitude = (double) LocData.get("longitude");
-                //you know
-                displayWeatherData(latitude, longitude); //!!dont delete this again!!
-                //it shows the data
-            }while(!location.equalsIgnoreCase("No"));
-            //do nothing when no is said
+        JFrame frame = new JFrame("enter city");
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 500);
+        frame.setLocation(430, 100);
 
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        //if you're actually reading this put "api's are cool!" in the comment
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 400, 20));
+        panel.setBackground(new Color(245, 245, 255));
+        frame.add(panel);
+
+        JLabel label = new JLabel("pick a city!");
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(label);
+
+        JTextField textfield = new JTextField(20);
+        textfield.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        textfield.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(textfield);
+
+        JButton enter = new JButton("Enter");
+        enter.setFont(new Font("SansSerif", Font.BOLD, 14));
+        enter.setBackground(new Color(100, 149, 237)); // Cornflower blue
+        enter.setForeground(Color.WHITE);
+        enter.setFocusPainted(false);
+        enter.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(enter);
+
+        JPanel weatherPanel = new JPanel();
+        weatherPanel.setLayout(new BorderLayout());
+        weatherPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        weatherPanel.setBackground(new Color(230, 240, 255));
+        panel.add(weatherPanel, BorderLayout.CENTER);
+
+
+
+        // i should comment
+        enter.addActionListener(e -> {
+            String location = textfield.getText().trim();
+            if (location.equalsIgnoreCase("No")) {
+                System.exit(0);
+            }
+
+            JSONObject LocData = getLocationData(location);
+            if (LocData == null) {
+                JOptionPane.showMessageDialog(frame, "Location not found.");
+                return;
+            }
+
+            double latitude = (double) LocData.get("latitude");
+            double longitude = (double) LocData.get("longitude");
+
+            try{
+                String url = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude +
+                        "&longitude=" + longitude + "&current=temperature_2m,relative_humidity_2m,wind_speed_10m";
+                HttpURLConnection connectApiSOMETHING = fetchApiResponse(url);
+                //gets the thing for the latitude and loooooongitude
+                if(connectApiSOMETHING.getResponseCode() != 200){
+                    System.out.println("Error: Could not connect to API");
+                    return;
+                    //200 = yay
+                }
+                String jsonResponse = readApiResponse(connectApiSOMETHING);
+                //memory doesnt grow on trees
+                JSONParser parser = new JSONParser();
+                JSONObject jsonObject = (JSONObject) parser.parse(jsonResponse);
+                JSONObject currentWeatherJson = (JSONObject) jsonObject.get("current");
+                //i'm not that smart
+
+                String time = (String) currentWeatherJson.get("time");
+
+                double weUseCewseeusInBurrrmingUm = (double) currentWeatherJson.get("temperature_2m");
+
+                double AmericaUnits = (double) currentWeatherJson.get("temperature_2m");
+
+                long relativeHumidity = (long) currentWeatherJson.get("relative_humidity_2m");
+
+                double windSpeed = (double) currentWeatherJson.get("wind_speed_10m");
+
+
+
+                JLabel data = new JLabel();
+                String weatherInfo = "<html><b>Weather Info:</b><br>Time: " + time +
+                        "<br>Temperature: " + weUseCewseeusInBurrrmingUm + " °C" +
+                        "<br>Humidity: " + relativeHumidity + " %" +
+                        "<br>Wind Speed: " + windSpeed + " m/s</html>";
+                data.setText(weatherInfo);
+                data.setFont(new Font("SansSerif", Font.PLAIN, 14));
+                weatherPanel.add(data, BorderLayout.CENTER);
+                weatherPanel.revalidate();
+                weatherPanel.repaint();
+
+
+            }catch(Exception b){
+                b.printStackTrace();
+            }
+
+
+
+
+        });
+        frame.setVisible(true);
     }
-
     private static JSONObject getLocationData(String location){
         location = location.replaceAll(" ", "+");
         //turns "new york" into "new+york" so the link works
@@ -82,60 +161,10 @@ public class Main {
         }
         return null;
     }
-    private static void getUImenu(){
-        JFrame frame = new JFrame("A Simple GUI");
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 500);
-        frame.setLocation(430, 100);
-
-        //JPanel panel = new JPanel();
-        //JTextField box = new JTextField();
-        //panel.add(box, BorderLayout.CENTER);
-        //frame.add(panel);
-        //frame.setVisible(true);
-        //box.setSize(100,25);
-
-    };
 
 
     private static void displayWeatherData(double latitude, double longitude){
-        try{
-            String url = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude +
-                    "&longitude=" + longitude + "&current=temperature_2m,relative_humidity_2m,wind_speed_10m";
-            HttpURLConnection connectApiSOMETHING = fetchApiResponse(url);
-            //gets the thing for the latitude and loooooongitude
-            if(connectApiSOMETHING.getResponseCode() != 200){
-                System.out.println("Error: Could not connect to API");
-                return;
-                //200 = yay
-            }
-            String jsonResponse = readApiResponse(connectApiSOMETHING);
-            //memory doesnt grow on trees
-            JSONParser parser = new JSONParser();
-            JSONObject jsonObject = (JSONObject) parser.parse(jsonResponse);
-            JSONObject currentWeatherJson = (JSONObject) jsonObject.get("current");
-            //i'm not that smart
-            String time = (String) currentWeatherJson.get("time");
-            System.out.println("Current Time: " + time);
-            //i think the time is wrong always
 
-            double weUseCewseeusInBurrrmingUm = (double) currentWeatherJson.get("temperature_2m");
-            System.out.println("Current Temperature (C): " + weUseCewseeusInBurrrmingUm);
-            //bloimey mate i cont belive the amuricans use the far en hights for the tempacha
-
-            double AmericaUnits = (double) currentWeatherJson.get("temperature_2m");
-            System.out.println("Current Temperature (F): " + ((AmericaUnits*(1.8))+32));
-            //idk which i should put
-            long relativeHumidity = (long) currentWeatherJson.get("relative_humidity_2m");
-            System.out.println("Relative Humidity: " + relativeHumidity);
-            //jsut assume its 100
-            double windSpeed = (double) currentWeatherJson.get("wind_speed_10m");
-            System.out.println("Weather Description: " + windSpeed);
-            //its too hot
-        }catch(Exception e){
-            e.printStackTrace();
-        }
     }
 
     private static String readApiResponse(HttpURLConnection connectApiSOMETHING) {
